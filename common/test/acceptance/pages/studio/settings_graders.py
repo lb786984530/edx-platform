@@ -73,23 +73,37 @@ class GradingPage(SettingsPage):
         """
         return self.q(css='.letter-grade').text
 
+    # def add_grades(self, grades_to_add):
+    #     """
+    #     Add new grade ranges in grades bar.
+    #     """
+    #     self.wait_for_element_visibility('.grades', 'Grade bar is visible')
+    #     for _ in range(grades_to_add):
+    #         try:
+    #             length = len(self.q(css=self.grade_ranges))
+    #             click_css(self, '.new-grade-button', require_notification=False)
+    #             self.wait_for(
+    #                 lambda: len(self.q(css=self.grade_ranges)) == length + 1 and
+    #                 len(self.q(css=self.grade_ranges)) < 6,
+    #                 description="Grades are added",
+    #                 timeout=5
+    #             )
+    #         except BrokenPromise:
+    #             return "Maximum of 5 grades can be added"
+
     def add_grades(self, grades_to_add):
         """
         Add new grade ranges in grades bar.
         """
-        self.wait_for_element_visibility('.grades', 'Grade bar is visible')
+        self.wait_for_element_visibility('.grades', 'Grade bar not visible')
         for _ in range(grades_to_add):
-            try:
-                length = len(self.q(css=self.grade_ranges))
-                click_css(self, '.new-grade-button', require_notification=False)
-                self.wait_for(
-                    lambda: len(self.q(css=self.grade_ranges)) == length + 1 and
-                    len(self.q(css=self.grade_ranges)) < 6,
-                    description="Grades are added",
-                    timeout=5
-                )
-            except BrokenPromise:
-                return "Maximum of 5 grades can be added"
+            length = len(self.q(css=self.grade_ranges))
+            click_css(self, '.new-grade-button', require_notification=False)
+            # self.wait_for(
+            #     lambda: len(self.q(css=self.grade_ranges)) == length + 1 or
+            #             len(self.q(css=self.grade_ranges)) < 6,
+            #     description="Grades are added"
+            # )
 
     def add_new_assignment_type(self):
         """
