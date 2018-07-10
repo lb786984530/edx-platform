@@ -145,10 +145,12 @@ class SystemTestSuite(PytestSuite):
         if self.xdist_ip_addresses:
             cmd.append('-d')
             for ip in self.xdist_ip_addresses.split(' '):
-                cmd.append('--tx ssh=ubuntu@{}//python="source /edx/app/edxapp/edxapp_env; python"//chdir="/edx/app/edxapp/edx-platform"'.format(ip))
+                xdist_string = '--tx ssh=ubuntu@{}//python="source /edx/app/edxapp/edxapp_env; ' \
+                               'python"//chdir="/edx/app/edxapp/edx-platform"'.format(ip)
+                cmd.append(xdist_string)
             already_synced_dirs = []
-            for id in self.test_id.split():
-                test_root_dir = id.split('/')[0]
+            for test_path in self.test_id.split():
+                test_root_dir = test_path.split('/')[0]
                 if test_root_dir not in already_synced_dirs:
                     cmd.append('--rsyncdir {}'.format(test_root_dir))
                     already_synced_dirs.append(test_root_dir)
@@ -163,7 +165,7 @@ class SystemTestSuite(PytestSuite):
             if not self.randomize:
                 cmd.append('-p no:randomly')
             if self.eval_attr:
-               cmd.append("-a '{}'".format(self.eval_attr))
+                cmd.append("-a '{}'".format(self.eval_attr))
 
         cmd.extend(self.passthrough_options)
         cmd.append(self.test_id)
@@ -251,10 +253,12 @@ class LibTestSuite(PytestSuite):
         if self.xdist_ip_addresses:
             cmd.append('-d')
             for ip in self.xdist_ip_addresses.split(' '):
-                cmd.append('--tx ssh=ubuntu@{}//python="source /edx/app/edxapp/edxapp_env; python"//chdir="/edx/app/edxapp/edx-platform"'.format(ip))
+                xdist_string = '--tx ssh=ubuntu@{}//python="source /edx/app/edxapp/edxapp_env; ' \
+                               'python"//chdir="/edx/app/edxapp/edx-platform"'.format(ip)
+                cmd.append(xdist_string)
             already_synced_dirs = []
-            for id in self.test_id.split():
-                test_root_dir = id.split('/')[0]
+            for test_path in self.test_id.split():
+                test_root_dir = test_path.split('/')[0]
                 if test_root_dir not in already_synced_dirs:
                     cmd.append('--rsyncdir {}'.format(test_root_dir))
                     already_synced_dirs.append(test_root_dir)
