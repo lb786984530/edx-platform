@@ -143,17 +143,17 @@ class SystemTestSuite(PytestSuite):
             cmd.append("-s")
 
         if self.xdist_ip_addresses:
-            cmd.append('-d')
+            cmd.append('--dist=loadscope')
             for ip in self.xdist_ip_addresses.split(' '):
                 xdist_string = '--tx ssh=ubuntu@{}//python="source /edx/app/edxapp/edxapp_env; ' \
                                'python"//chdir="/edx/app/edxapp/edx-platform"'.format(ip)
                 cmd.append(xdist_string)
-            already_synced_dirs = []
+            already_synced_dirs = set()
             for test_path in self.test_id.split():
                 test_root_dir = test_path.split('/')[0]
                 if test_root_dir not in already_synced_dirs:
                     cmd.append('--rsyncdir {}'.format(test_root_dir))
-                    already_synced_dirs.append(test_root_dir)
+                    already_synced_dirs.add(test_root_dir)
         else:
             if self.processes == -1:
                 cmd.append('-n auto')
@@ -251,17 +251,17 @@ class LibTestSuite(PytestSuite):
             cmd.append("-s")
 
         if self.xdist_ip_addresses:
-            cmd.append('-d')
+            cmd.append('--dist=loadscope')
             for ip in self.xdist_ip_addresses.split(' '):
                 xdist_string = '--tx ssh=ubuntu@{}//python="source /edx/app/edxapp/edxapp_env; ' \
                                'python"//chdir="/edx/app/edxapp/edx-platform"'.format(ip)
                 cmd.append(xdist_string)
-            already_synced_dirs = []
+            already_synced_dirs = set()
             for test_path in self.test_id.split():
                 test_root_dir = test_path.split('/')[0]
                 if test_root_dir not in already_synced_dirs:
                     cmd.append('--rsyncdir {}'.format(test_root_dir))
-                    already_synced_dirs.append(test_root_dir)
+                    already_synced_dirs.add(test_root_dir)
         else:
             if self.eval_attr:
                 cmd.append("-a '{}'".format(self.eval_attr))

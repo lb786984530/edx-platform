@@ -9,10 +9,9 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class JenkinsContainerManager():
+class PytestContainerManager():
     """
-    Responsible for spinning up and terminating jenkins-worker containers
-    on build jenkins.
+    Responsible for spinning up and terminating containers to be used with pytest-xdist
     """
 
     def __init__(self, region, cluster):
@@ -21,7 +20,7 @@ class JenkinsContainerManager():
 
     def spin_up_containers(self, number_of_containers, task_name, subnets, security_groups, public_ip_enabled, launch_type):
         """
-        Spins up jenkins-worker containers and generates two .txt files, one containing the IP
+        Spins up containers and generates two .txt files, one containing the IP
         addresses of the new containers, the other containing their task_arns.
         """
         CONTAINER_RUN_TIME_OUT_MINUTES = 10
@@ -102,19 +101,19 @@ class JenkinsContainerManager():
 
         ip_list_string = " ".join(ip_addresses)
         logger.info("Container IP list: {}".format(ip_list_string))
-        ip_list_file = open("jenkins_container_ip_list.txt", "w")
+        ip_list_file = open("pytest_container_ip_list.txt", "w")
         ip_list_file.write(ip_list_string)
         ip_list_file.close()
 
         task_arn_list_string = " ".join(task_arns)
         logger.info("Container task arn list: {}".format(task_arn_list_string))
-        task_arn_file = open("jenkins_container_task_arns.txt", "w")
+        task_arn_file = open("pytest_container_task_arns.txt", "w")
         task_arn_file.write(task_arn_list_string)
         task_arn_file.close()
 
     def terminate_containers(self, task_arns, reason):
         """
-        Terminates jenkins-worker containers based on a list of task_arns.
+        Terminates containers based on a list of task_arns.
         """
         for task_arn in task_arns:
             response = self.ecs.stop_task(
@@ -127,7 +126,7 @@ class JenkinsContainerManager():
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(
-        description="JenkinsContainerManager, manages ECS containers in an AWS cluster."
+        description="PytestContainerManager, manages ECS containers in an AWS cluster."
     )
 
     parser.add_argument('--region', '-g', default='us-east-1',
@@ -138,8 +137,8 @@ if __name__ == "__main__":
                         "the testeng cluster: jenkins-worker-containers")
 
     parser.add_argument('--action', '-a', choices=['up', 'down'], default=None,
-                        help="Action for JenkinsContainerManager to perform. "
-                        "Either up for spinning up  AWS ECS containers or terminating for stopping them")
+                        help="Action for PytestContainerManager to perform. "
+                        "Either up for spinning up  AWS ECS containers or down for stopping them")
 
     # Spinning up containers
     parser.add_argument('--num_containers', '-n', type=int, default=None,
@@ -168,7 +167,7 @@ if __name__ == "__main__":
                         help="Reason for terminating containers")
 
     args = parser.parse_args()
-    containerManager = JenkinsContainerManager(args.region, args.cluster)
+    containerManager = PytestContainerManager(args.region, args.cluster)
 
     if args.action == 'up':
         containerManager.spin_up_containers(
@@ -185,4 +184,4 @@ if __name__ == "__main__":
             args.reason
         )
     else:
-        logger.info("No action specified for JenkinsContainerManager")
+        logger.info("No action specified for PytestContainerManager")
