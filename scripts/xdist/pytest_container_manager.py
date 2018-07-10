@@ -27,17 +27,18 @@ class PytestContainerManager():
         MAX_RUN_TASK_RETRIES = 7
 
         revision = self.ecs.describe_task_definition(taskDefinition=task_name)['taskDefinition']['revision']
-        task_definition = task_name + ":{}".format(revision)
+        task_definition = "{}:{}".format(task_name, revision)
 
         logging.info("Spinning up {} containers based on task definition: {}".format(number_of_containers, task_definition))
 
         remainder = number_of_containers % 10
-        dividend = number_of_containers / 10
+        quotient = number_of_containers / 10
 
-        container_num_list = [10 for i in range(0, dividend)]
+        container_num_list = [10 for i in range(0, quotient)]
         if remainder:
             container_num_list.append(remainder)
 
+        # Boot up containers. boto3's run_task only allows 10 containers to be launched at a time
         task_arns = []
         for num in container_num_list:
             for retry in range(1, MAX_RUN_TASK_RETRIES + 1):
@@ -71,14 +72,15 @@ class PytestContainerManager():
             for task_response in response['tasks']:
                 task_arns.append(task_response['taskArn'])
 
-        not_running = task_arns
+        # Wait for containers to finish spinning up
+        not_running = task_arns[:]
         ip_addresses = []
         all_running = False
         for attempt in range(0, CONTAINER_RUN_TIME_OUT_MINUTES * 2):
             time.sleep(30)
             list_tasks_response = self.ecs.describe_tasks(cluster=self.cluster_name, tasks=not_running)['tasks']
             del not_running[:]
-            for counter, task_response in enumerate(list_tasks_response):
+            for task_response in list_tasks_response:
                 if task_response['lastStatus'] == 'RUNNING':
                     for container in task_response['containers']:
                         ip_addresses.append(container["networkInterfaces"][0]["privateIpv4Address"])
@@ -99,6 +101,7 @@ class PytestContainerManager():
 
         logger.info("Successfully booted up {} containers.".format(number_of_containers))
 
+        # Generate .txt files containing IP addresses and task arns
         ip_list_string = " ".join(ip_addresses)
         logger.info("Container IP list: {}".format(ip_list_string))
         ip_list_file = open("pytest_container_ip_list.txt", "w")
