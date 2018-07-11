@@ -868,8 +868,12 @@ class LoncapaProblem(object):
             # An asset named python_lib.zip can be imported by Python code.
             zip_lib = self.capa_system.get_python_lib_zip()
             if zip_lib is not None:
+                log.info('-------zip_lib not None----------------')
                 extra_files.append(("python_lib.zip", zip_lib))
                 python_path.append("python_lib.zip")
+            else:
+                log.info('-------zip_lib is None----------------')
+
 
             try:
                 safe_exec(

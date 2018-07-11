@@ -1,8 +1,9 @@
 import re
-
+import logging
 from django.conf import settings
 from lms.djangoapps.dashboard.git_import import DEFAULT_PYTHON_LIB_FILENAME
 
+log = logging.getLogger(__name__)
 
 def can_execute_unsafe_code(course_id):
     """
@@ -31,8 +32,15 @@ def can_execute_unsafe_code(course_id):
 
 def get_python_lib_zip(contentstore, course_id):
     """Return the bytes of the course code library file, if it exists."""
+    log.info("------------------get_python_lib_zip---------------")
+    log.info("------------------DEFAULT_PYTHON_LIB_FILENAME-------%s---------", DEFAULT_PYTHON_LIB_FILENAME)
+
     python_lib_filename = getattr(settings, 'PYTHON_LIB_FILENAME', DEFAULT_PYTHON_LIB_FILENAME)
+    log.info("------------------python_lib_filename-------%s---------", python_lib_filename)
+
     asset_key = course_id.make_asset_key("asset", python_lib_filename)
+    log.info("------------------asset_key-------%s---------", asset_key)
+
     zip_lib = contentstore().find(asset_key, throw_on_not_found=False)
     if zip_lib is not None:
         return zip_lib.data
