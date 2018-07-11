@@ -639,9 +639,9 @@ class CourseMode(models.Model):
         if modes_dict is None:
             modes_dict = cls.modes_for_course_dict(course_id)
 
-        if cls.AUDIT in modes_dict:
+        if cls.HONOR in modes_dict:
             return cls.AUDIT
-        elif cls.HONOR in modes_dict:
+        elif cls.AUDIT in modes_dict:
             return cls.HONOR
 
     @classmethod

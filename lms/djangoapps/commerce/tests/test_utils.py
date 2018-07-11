@@ -15,9 +15,11 @@ from xmodule.modulestore.tests.django_utils import ModuleStoreTestCase
 from xmodule.modulestore.tests.factories import CourseFactory
 
 from course_modes.models import CourseMode
+from course_modes.tests.factories import CourseModeFactory
 from lms.djangoapps.commerce.models import CommerceConfiguration
-from lms.djangoapps.commerce.utils import EcommerceService, refund_entitlement
+from lms.djangoapps.commerce.utils import EcommerceService, refund_entitlement, refund_seat
 from openedx.core.lib.log_utils import audit_log
+from student.models import CourseEnrollment
 from student.tests.factories import (TEST_PASSWORD, UserFactory)
 
 # Entitlements is not in CMS' INSTALLED_APPS so these imports will error during test collection
@@ -288,3 +290,52 @@ class RefundUtilMethodTests(ModuleStoreTestCase):
         call_args = list(mock_send_notification.call_args)
         assert call_args[0] == (course_entitlement.user, [1])
         assert not refund_success
+
+    @ddt.data(
+        (["verified", "audit"], "audit"),
+        ("professional", "professional"),
+        ("credit", "credit"),
+    )
+    @ddt.unpack
+    @httpretty.activate
+    def test_mode_change_after_refund_seat(self, course_modes, new_mode):
+        """
+        Test if a course seat is refunded student is enrolled into default course mode
+        unless no default mode available.
+        """
+        for course_mode in course_modes:
+            CourseModeFactory.create(
+                course_id=self.course.id,
+                mode_slug=course_mode,
+                mode_display_name=course_mode,
+            )
+
+        httpretty.register_uri(
+            httpretty.POST,
+            settings.ECOMMERCE_API_URL + 'refunds/',
+            status=201,
+            body='[1]',
+            content_type='application/json'
+        )
+        httpretty.register_uri(
+            httpretty.PUT,
+            settings.ECOMMERCE_API_URL + 'refunds/1/process/',
+            status=200,
+            body=json.dumps({
+                "id": 9,
+                "created": "2017-12-21T18:23:49.468298Z",
+                "modified": "2017-12-21T18:24:02.741426Z",
+                "total_credit_excl_tax": "100.00",
+                "currency": "USD",
+                "status": "Complete",
+                "order": 15,
+                "user": 5
+            }),
+            content_type='application/json'
+        )
+        enrollment = CourseEnrollment.enroll(self.user, self.course.id, mode=course_modes[0])
+        refund_success = refund_seat(enrollment, True)
+        course_mode, is_active = CourseEnrollment.enrollment_mode_for_user(self.user, self.course.id)
+        assert refund_success
+        self.assertEqual(course_mode, new_mode)
+        self.assertEqual(is_active, False)
